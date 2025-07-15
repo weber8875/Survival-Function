@@ -1,0 +1,397 @@
+---
+title: "存活分析期末報告"
+author: "M112040026黃偉柏"
+date: "5/29/2023"
+output: html_document
+---
+#library
+```{r}
+library(KMsurv)
+library(survival)
+library(readr)
+library(splines)
+library(ggplot2)
+library(funModeling)
+library(survminer)
+library(tidyverse)
+library(memisc)
+library(scales)
+install.packages('fastDummies')
+library(fastDummies)
+```
+
+```{r}
+cgd <- read_csv("gbsg.csv")
+```
+
+```{r}
+head(cgd)
+```
+
+```{r}
+str(cgd)
+```
+
+# 不分組K-M plot
+```{r}
+km_fitall <- survfit(Surv(rfstime , status) ~ 1, data = cgd)
+summary(km_fitall)
+```
+
+```{r}
+ggsurvplot(km_fitall)
+```
+
+```{r}
+km_fitall_2 <- survfit(Surv(rfstime , status) ~ grade, data = cgd)
+ggsurvplot(km_fitall_2)
+```
+
+# log rank test
+```{r}
+diff_meno <- survdiff(Surv(rfstime,status)~ factor(meno),data=cgd)
+diff_meno
+```
+
+```{r}
+log_rank_t1 <- survfit(Surv(rfstime,status)~meno,data=cgd)
+ggsurvplot(log_rank_t1)
+```
+
+```{r}
+diff_grade <- survdiff(Surv(rfstime,status)~ factor(grade),data=cgd)
+diff_grade
+```
+
+```{r}
+log_rank_grade <- survfit(Surv(rfstime,status)~grade,data=cgd)
+ggsurvplot(log_rank_grade)
+```
+
+```{r}
+diff_hormon <- survdiff(Surv(rfstime,status)~ factor(hormon),data=cgd)
+diff_hormon
+```
+
+```{r}
+log_rank_hormon <- survfit(Surv(rfstime,status)~hormon,data=cgd)
+ggsurvplot(log_rank_hormon)
+```
+
+# Wald test(All)
+```{r}
+Fitw  = coxph(formula = Surv(rfstime, status)~ ., data = cgd)  ##所有變數做cox模型
+summary(Fitw)
+```
+
+
+# Likelihood ratio test
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ pid, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ age, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ meno, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ size, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ grade, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ nodes, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ pgr, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ er, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+```{r}
+Fit_reduced = coxph(Surv(rfstime, status)~ hormon, data = cgd)
+chiLR = 2*(Fitw$loglik[2]- Fit_reduced$loglik[2])
+chiLR ##卡方值
+1-pchisq(chiLR, 1) ##p-value
+```
+
+# Wald test
+```{r}
+Cov <- c(2) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+```{r}
+Cov <- c(3) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+```{r}
+Cov <- c(4) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+```{r}
+Cov <- c(5) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+```{r}
+Cov <- c(6) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+```{r}
+Cov <- c(7) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+```{r}
+Cov <- c(8) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+```{r}
+Cov <- c(9) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+```{r}
+Cov <- c(10) ##收集變數
+beta1hat = Fitw$coefficients[Cov]
+beta10 = rep(0, 1)
+var11 = Fitw$var[Cov,Cov]
+chiWald = t(beta1hat - beta10)%*%solve(var11)%*%(beta1hat- beta10)
+chiWald ##卡方值
+1-pchisq(chiWald,1) ##p-value
+```
+
+
+# Score test
+```{r}
+Fit_pid=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1],0,Fitw$coefficients[3:10]),iter=0)
+score.vector=colSums(coxph.detail(Fit_pid)$score)
+
+chiSC_pid=t(score.vector[2])%*%Fit_pid$var[2,2]%*%score.vector[2]
+
+1-pchisq(chiSC_pid,1) #p value
+```
+
+```{r}
+Fit_age=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1:2],0,Fitw$coefficients[4:10]),iter=0)
+score.vector=colSums(coxph.detail(Fit_age)$score)
+
+chiSC_age=t(score.vector[3])%*%Fit_age$var[3,3]%*%score.vector[3]
+
+1-pchisq(chiSC_age,1) #p value
+```
+
+```{r}
+Fit_age=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1:3],0,Fitw$coefficients[5:10]),iter=0)
+score.vector=colSums(coxph.detail(Fit_age)$score)
+
+chiSC_age=t(score.vector[4])%*%Fit_age$var[4,4]%*%score.vector[4]
+
+1-pchisq(chiSC_age,1) #p value
+```
+
+```{r}
+Fit_age=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1:4],0,Fitw$coefficients[6:10]),iter=0)
+score.vector=colSums(coxph.detail(Fit_age)$score)
+
+chiSC_age=t(score.vector[5])%*%Fit_age$var[5,5]%*%score.vector[5]
+
+1-pchisq(chiSC_age,1) #p value
+```
+
+```{r}
+Fit_age=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1:5],0,Fitw$coefficients[7:10]),iter=0)
+score.vector=colSums(coxph.detail(Fit_age)$score)
+
+chiSC_age=t(score.vector[6])%*%Fit_age$var[6,6]%*%score.vector[6]
+
+1-pchisq(chiSC_age,1) #p value
+```
+
+```{r}
+Fit_age=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1:6],0,Fitw$coefficients[8:10]),iter=0)
+score.vector=colSums(coxph.detail(Fit_age)$score)
+
+chiSC_age=t(score.vector[7])%*%Fit_age$var[7,7]%*%score.vector[7]
+
+1-pchisq(chiSC_age,1) #p value
+```
+
+```{r}
+Fit_age=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1:7],0,Fitw$coefficients[9:10]),iter=0)
+score.vector=colSums(coxph.detail(Fit_age)$score)
+
+chiSC_age=t(score.vector[8])%*%Fit_age$var[8,8]%*%score.vector[8]
+
+1-pchisq(chiSC_age,1) #p value
+```
+
+```{r}
+Fit_age=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1:8],0,Fitw$coefficients[10]),iter=0)
+score.vector=colSums(coxph.detail(Fit_age)$score)
+
+chiSC_age=t(score.vector[9])%*%Fit_age$var[9,9]%*%score.vector[9]
+
+1-pchisq(chiSC_age,1) #p value
+```
+
+```{r}
+Fit_age=coxph(Surv(rfstime, status)~ pid + age + factor(meno)  +  size + factor(grade)  + nodes + pgr + er + factor(hormon), data = cgd,init=c(Fitw$coefficients[1:9],0),iter=0)
+score.vector=colSums(coxph.detail(Fit_age)$score)
+
+chiSC_age=t(score.vector[10])%*%Fit_age$var[10,10]%*%score.vector[10]
+
+1-pchisq(chiSC_age,1) #p value
+```
+
+
+# cox PH model (global)
+```{r}
+Fit_PH_recurrence = coxph(data=cgd,Surv(rfstime,status)~ ., )
+summary(Fit_PH_recurrence)
+cumulative_hazard <- basehaz(Fit_PH_recurrence)
+ggplot(data = cumulative_hazard) + 
+  geom_point(mapping = aes(x = time, y = hazard) , color = "pink") +
+  labs(title="Kaplan and Meier estimatorof cumulative hazard function", x="time", y = "cumulative hazard")
+```
+
+# cox PH model (local)
+```{r}
+Fit_full_modelph = coxph(data=cgd,Surv(rfstime,status)~ .)
+Fit_full_modelph
+```
+
+```{r}
+Fit_reduced_modelph = coxph(data=cgd,Surv(rfstime,status)~ grade+hormon)
+Fit_reduced_modelph
+```
+
+# 做Schoenfeld Test
+```{r, fig.height=5, fig.width=6}
+Fit_full_modelok = coxph(data=cgd,Surv(rfstime,status)~ nodes)
+Fit_full_modelok
+cox.zph(Fit_full_modelok) ##對模型做Schoenfeld Test
+
+ggcoxzph(cox.zph(Fit_full_modelok)) ##Schoenfeld殘差圖，發現enum圖的點越來越密集
+```
+
+```{r, fig.height=5, fig.width=6}
+Fit_full_modelok = coxph(data=cgd,Surv(rfstime,status)~ nodes)
+Fit_full_modelok
+cox.zph(Fit_full_modelok) ##對模型做Schoenfeld Test
+
+ggcoxzph(cox.zph(Fit_full_modelok)) ##Schoenfeld殘差圖，發現enum圖的點越來越密集
+```
+
+
+# cox snell
+
+```{r}
+##網路上做法
+## Cox-Snell residuals
+fit1 <- coxph(formula = Surv(rfstime, status) ~ grade +hormon,
+              data    = cgd,
+              ties    = c("efron","breslow","exact")[1])
+cgd$resid_mart <- residuals(fit1, type = "martingale")
+cgd$resid_coxsnell <- -(cgd$resid_mart - cgd$status)
+
+
+## Fit model on Cox-Snell residuals (Approximately Expo(1) distributed under correct model)
+fit_coxsnell <- coxph(formula = Surv(resid_coxsnell, status) ~ grade+hormon,
+                      data    = cgd,
+                      ties    = c("efron","breslow","exact")[1])
+
+## Nelson-Aalen estimator for baseline hazard (all covariates zero)
+df_base_haz <- basehaz(fit_coxsnell, centered = FALSE)
+```
+
+```{r}
+## Plot
+ggplot(data = df_base_haz, mapping = aes(x = time, y = hazard)) +
+    geom_point() +
+    scale_x_continuous(limit = c(0,1.5)) +
+    scale_y_continuous(limit = c(0,1.5)) +
+    labs(x = "Cox-Snell residuals as pseudo observed times",
+         y = "Estimated cumulative hazard at pseudo observed times") +
+    theme_bw() + theme(legend.key = element_blank())
+```
+
